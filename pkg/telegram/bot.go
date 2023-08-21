@@ -6,16 +6,22 @@ import (
 
 type Bot struct {
 	bot *tgbotapi.BotAPI
+	pocket.Client *pocket.Client
+	redirectURL string
 }
 
-func NewBot(bot *tgbotapi.BotAPI) *Bot {
-	return &Bot{bot: bot}
+func NewBot(bot *tgbotapi.BotAPI, pocket.Client *pocket.Client, redirectURL string) *Bot {
+	return &Bot{bot: bot, pocket.Client: pocket.Client, redirectURL: redirectURL}
 }
 
 func (b *Bot) Start() error {
 	log.Printf("Authorized on account %s", b.bot.Self.UserName)
 
 	
+	updates, err := b.initUpdatesChannel()
+	if err != nil {
+		return err
+	}
 
 	b.handleUpdates(update)
 	return nil
@@ -24,22 +30,21 @@ func (b *Bot) Start() error {
 func (b *Bot) handleUpdates(update tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-			msg.ReplyToMessageID = update.Message.MessageID
-
-			b.bot.Send(msg)
+			continue
 		}
+		update.Message.InCommand() {
+			b.handleCommand(update.Message)
+			continue
+		}
+		b.handleMessage(update.Message)
 	}
 }
+
 
 func (b *Bot) initUpdatesChannel() (tgbotapi.UpdatesChannel, error) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(u)
-	if err != nil {
-		return err
-	}
+	return bot.GetUpdatesChan(u)
+	
 }
