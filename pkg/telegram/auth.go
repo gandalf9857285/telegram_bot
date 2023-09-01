@@ -1,8 +1,8 @@
 package telegram
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 )
 
 func (b *Bot) generateAuthorizationLink(chatID int64) (string, error) {
